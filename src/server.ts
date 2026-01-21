@@ -26,6 +26,10 @@ const __dirname = path.dirname(__filename);
 const WORKSPACE_DIR = process.env.PYODIDE_WORKSPACE || path.join(__dirname, "..", "workspace");
 const VIRTUAL_WORKSPACE = "/workspace";
 
+// Security limits
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
+const MAX_WORKSPACE_SIZE = 100 * 1024 * 1024; // 100MB total workspace
+
 // Ensure workspace exists
 if (!fs.existsSync(WORKSPACE_DIR)) {
   fs.mkdirSync(WORKSPACE_DIR, { recursive: true });
@@ -39,6 +43,76 @@ class PyodideManager {
   private pyodide: PyodideInterface | null = null;
   private initialized = false;
   private initializationPromise: Promise<PyodideInterface> | null = null;
+
+  /**
+   * Validate and normalize a file path to prevent directory traversal attacks
+   * @param filePath - The file path to validate
+   * @returns The normalized virtual filesystem path
+   * @throws Error if path is invalid or attempts to escape workspace
+   */
+  private validatePath(filePath: string): string {
+    // Convert to virtual path if not already absolute
+    const fullPath = filePath.startsWith("/") ? filePath : `${VIRTUAL_WORKSPACE}/${filePath}`;
+
+    // Normalize the path to resolve '..' and '.' segments
+    const normalized = path.posix.normalize(fullPath);
+
+    // Check if the normalized path is still within the workspace
+    if (!normalized.startsWith(VIRTUAL_WORKSPACE + "/") && normalized !== VIRTUAL_WORKSPACE) {
+      throw new Error(`Invalid path: Path traversal detected. Path must be within ${VIRTUAL_WORKSPACE}`);
+    }
+
+    // Additional check: reject paths containing '..' after normalization
+    // (should be caught above, but defense in depth)
+    if (normalized.includes("..")) {
+      throw new Error("Invalid path: Path contains '..' after normalization");
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Calculate total workspace size from host filesystem
+   * @returns Total size in bytes
+   */
+  private getWorkspaceSize(): number {
+    if (!fs.existsSync(WORKSPACE_DIR)) {
+      return 0;
+    }
+
+    let totalSize = 0;
+
+    const calculateSize = (dirPath: string): void => {
+      const items = fs.readdirSync(dirPath);
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        const stat = fs.statSync(itemPath);
+        if (stat.isDirectory()) {
+          calculateSize(itemPath);
+        } else {
+          totalSize += stat.size;
+        }
+      }
+    };
+
+    calculateSize(WORKSPACE_DIR);
+    return totalSize;
+  }
+
+  /**
+   * Validate that writing a file won't exceed workspace size limit
+   * @param fileSize - Size of file to be written
+   * @throws Error if workspace size limit would be exceeded
+   */
+  private async checkWorkspaceSize(fileSize: number): Promise<void> {
+    const currentSize = this.getWorkspaceSize();
+    if (currentSize + fileSize > MAX_WORKSPACE_SIZE) {
+      throw new Error(
+        `Workspace size limit exceeded. Current: ${(currentSize / 1024 / 1024).toFixed(2)}MB, ` +
+        `Limit: ${(MAX_WORKSPACE_SIZE / 1024 / 1024).toFixed(2)}MB`
+      );
+    }
+  }
 
   async initialize(): Promise<PyodideInterface> {
     // Return existing instance if already initialized
@@ -91,10 +165,12 @@ class PyodideManager {
     }
 
     // Add workspace to Python path for imports
+    // Escape the path to prevent code injection vulnerabilities
+    const escapedWorkspacePath = VIRTUAL_WORKSPACE.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     this.pyodide.runPython(`
 import sys
-if '${VIRTUAL_WORKSPACE}' not in sys.path:
-    sys.path.insert(0, '${VIRTUAL_WORKSPACE}')
+if '${escapedWorkspacePath}' not in sys.path:
+    sys.path.insert(0, '${escapedWorkspacePath}')
 `);
 
     // Sync host workspace to virtual FS
@@ -218,7 +294,8 @@ if '${VIRTUAL_WORKSPACE}' not in sys.path:
 
     try {
       // Set working directory to workspace
-      py.runPython(`import os; os.chdir('${VIRTUAL_WORKSPACE}')`);
+      const escapedWorkspacePath = VIRTUAL_WORKSPACE.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      py.runPython(`import os; os.chdir('${escapedWorkspacePath}')`);
 
       // Auto-detect and load packages from imports in the code
       await py.loadPackagesFromImports(code);
@@ -302,12 +379,12 @@ if '${VIRTUAL_WORKSPACE}' not in sys.path:
    * Read a file from the virtual filesystem
    */
   async readFile(filePath: string): Promise<{ success: boolean; content: string | null; error: string | null }> {
-    const py = await this.initialize();
-    this.syncHostToVirtual();
-
-    const fullPath = filePath.startsWith("/") ? filePath : `${VIRTUAL_WORKSPACE}/${filePath}`;
-
     try {
+      const py = await this.initialize();
+      this.syncHostToVirtual();
+
+      const fullPath = this.validatePath(filePath);
+
       const content = py.FS.readFile(fullPath, { encoding: "utf8" });
       return { success: true, content, error: null };
     } catch (e) {
@@ -319,15 +396,27 @@ if '${VIRTUAL_WORKSPACE}' not in sys.path:
    * Write a file to the virtual filesystem
    */
   async writeFile(filePath: string, content: string): Promise<{ success: boolean; error: string | null }> {
-    const py = await this.initialize();
-    this.syncHostToVirtual();
-
-    const fullPath = filePath.startsWith("/") ? filePath : `${VIRTUAL_WORKSPACE}/${filePath}`;
-
     try {
+      const py = await this.initialize();
+      this.syncHostToVirtual();
+
+      const fullPath = this.validatePath(filePath);
+
+      // Validate file size
+      const fileSize = Buffer.byteLength(content, 'utf8');
+      if (fileSize > MAX_FILE_SIZE) {
+        throw new Error(
+          `File too large: ${(fileSize / 1024 / 1024).toFixed(2)}MB. ` +
+          `Maximum allowed: ${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)}MB`
+        );
+      }
+
+      // Check workspace size limit
+      await this.checkWorkspaceSize(fileSize);
+
       // Ensure parent directory exists
-      const parentDir = path.dirname(fullPath);
-      if (parentDir && parentDir !== "/") {
+      const parentDir = path.posix.dirname(fullPath);
+      if (parentDir && parentDir !== "/" && !parentDir.includes("..")) {
         py.FS.mkdirTree(parentDir);
       }
 
@@ -349,16 +438,12 @@ if '${VIRTUAL_WORKSPACE}' not in sys.path:
     files: Array<{ name: string; isDirectory: boolean; size: number }>;
     error: string | null;
   }> {
-    const py = await this.initialize();
-    this.syncHostToVirtual();
-
-    const fullPath = dirPath
-      ? dirPath.startsWith("/")
-        ? dirPath
-        : `${VIRTUAL_WORKSPACE}/${dirPath}`
-      : VIRTUAL_WORKSPACE;
-
     try {
+      const py = await this.initialize();
+      this.syncHostToVirtual();
+
+      const fullPath = dirPath ? this.validatePath(dirPath) : VIRTUAL_WORKSPACE;
+
       const items = py.FS.readdir(fullPath).filter((x: string) => x !== "." && x !== "..");
 
       const files = items.map((item: string) => {
@@ -381,16 +466,20 @@ if '${VIRTUAL_WORKSPACE}' not in sys.path:
    * Delete a file or directory
    */
   async deleteFile(filePath: string): Promise<{ success: boolean; error: string | null }> {
-    const py = await this.initialize();
-    this.syncHostToVirtual();
-
-    const fullPath = filePath.startsWith("/") ? filePath : `${VIRTUAL_WORKSPACE}/${filePath}`;
-    const relativePath = filePath.startsWith("/") 
-      ? filePath.replace(VIRTUAL_WORKSPACE + "/", "") 
-      : filePath;
-    const hostPath = path.join(WORKSPACE_DIR, relativePath);
-
     try {
+      const py = await this.initialize();
+      this.syncHostToVirtual();
+
+      const fullPath = this.validatePath(filePath);
+      const relativePath = fullPath.replace(VIRTUAL_WORKSPACE + "/", "");
+      const hostPath = path.join(WORKSPACE_DIR, relativePath);
+
+      // Validate the host path is within workspace directory
+      const normalizedHostPath = path.normalize(hostPath);
+      if (!normalizedHostPath.startsWith(path.normalize(WORKSPACE_DIR))) {
+        throw new Error("Invalid path: Path traversal detected in host filesystem");
+      }
+
       // Delete from virtual filesystem
       const stat = py.FS.stat(fullPath);
       if (py.FS.isDir(stat.mode)) {
