@@ -12,7 +12,6 @@
 import { loadPyodide, PyodideInterface } from "pyodide";
 import * as fs from "fs";
 import * as path from "path";
-import { fileURLToPath } from "url";
 import {
   WORKSPACE_DIR,
   VIRTUAL_WORKSPACE,
