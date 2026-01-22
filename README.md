@@ -1,34 +1,34 @@
 # Pyodide Sandbox MCP Server
 
-A TypeScript MCP server providing **sandboxed Python code execution** using [Pyodide](https://pyodide.org/) (Python compiled to WebAssembly).
+A TypeScript MCP server providing **sandboxed Python and Bash execution** using [Pyodide](https://pyodide.org/) (Python compiled to WebAssembly) and [just-bash](https://github.com/vercel-labs/just-bash).
 
 ## Features
 
 - 🔒 **Secure Sandbox**: Python code runs in an isolated WebAssembly environment
+- 🐚 **Bash Execution**: Run bash commands with 50+ built-in tools (grep, sed, awk, jq, find, etc.)
 - 📁 **Virtual Filesystem**: Read, write, list, and delete files in a persistent workspace
 - 📦 **Package Management**: Install pure Python packages via micropip
 - 🔄 **Session Persistence**: Workspace files persist across executions
-- ⚡ **Native Integration**: Direct Pyodide integration (no subprocess bridge)
+- ⚡ **Native Integration**: Direct Pyodide and just-bash integration (no subprocess bridge)
+- 🤝 **Interoperability**: Bash and Python share the same workspace filesystem
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    MCP Client (Cursor)                  │
-└─────────────────────┬───────────────────────────────────┘
-                      │ MCP Protocol (stdio)
-┌─────────────────────▼───────────────────────────────────┐
-│           TypeScript MCP Server (Node.js)               │
-│  • @modelcontextprotocol/sdk                            │
-│  • Native Pyodide integration                           │
-│  • Virtual FS ↔ Host FS sync                            │
-└─────────────────────┬───────────────────────────────────┘
-                      │ Direct API calls
-┌─────────────────────▼───────────────────────────────────┐
-│                 Pyodide (WebAssembly)                   │
-│  • Python runtime in WASM                               │
-│  • Emscripten virtual filesystem                        │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                   MCP Client (Cursor)                    │
+└────────────────────┬─────────────────────────────────────┘
+                     │ MCP Protocol (stdio)
+┌────────────────────▼─────────────────────────────────────┐
+│           TypeScript MCP Server (Node.js)                │
+│  • @modelcontextprotocol/sdk                             │
+│  • PyodideManager + BashManager                          │
+│  • Virtual FS ↔ Host FS sync                             │
+├──────────────────────┬──────────────────┬────────────────┤
+│   Pyodide (WASM)     │  just-bash (TS)  │  Shared FS     │
+│  • Python runtime    │  • Bash simulator│  • ./workspace │
+│  • /workspace mount  │  • 50+ commands  │  • Persistence │
+└──────────────────────┴──────────────────┴────────────────┘
 ```
 
 ## Prerequisites
@@ -88,6 +88,58 @@ Or for development with `tsx`:
 ```
 
 ## Available Tools
+
+### `execute_bash`
+
+Execute bash commands in the sandboxed environment using just-bash.
+
+**Features:**
+- 50+ built-in commands: grep, sed, awk, find, jq, curl, tar, etc.
+- Pipes and redirections: `|`, `>`, `>>`, `2>`, `2>&1`
+- Variables, loops, conditionals, and functions
+- File operations: ls, cat, cp, mv, rm, mkdir, etc.
+- Text processing: grep, sed, awk, cut, sort, uniq, wc, etc.
+- Data tools: jq (JSON), sqlite3 (SQLite), xan (CSV), yq (YAML)
+
+**Security:**
+- No real processes spawned (TypeScript simulation)
+- Execution limits prevent infinite loops
+- Network access disabled by default
+- Filesystem limited to workspace directory
+
+```typescript
+// Input
+{
+  command: string;  // Bash command to execute
+  cwd?: string;     // Working directory (relative to /workspace)
+}
+
+// Output
+{
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+```
+
+**Examples:**
+
+```bash
+# Find Python files
+find . -name "*.py" -type f
+
+# Process text files
+cat data.txt | grep "pattern" | wc -l
+
+# JSON processing
+cat data.json | jq '.users[] | {name, email}'
+
+# Multiple commands
+ls -la && cat README.md | head -10
+
+# Text processing pipeline
+grep -r "TODO" src/ | sort | uniq
+```
 
 ### `execute_python`
 
@@ -306,10 +358,45 @@ npm run build
 npm run clean
 ```
 
+## Bash and Python Interoperability
+
+Bash and Python share the same workspace filesystem, enabling powerful workflows:
+
+**Example: Bash prepares data, Python analyzes**
+
+```bash
+# Bash: Extract and clean data
+cat raw_data.csv | grep -v '^#' | sort > clean_data.csv
+```
+
+```python
+# Python: Analyze the cleaned data
+import pandas as pd
+df = pd.read_csv('/workspace/clean_data.csv')
+print(df.describe())
+```
+
+**Example: Python generates data, Bash processes**
+
+```python
+# Python: Generate report data
+import json
+data = [{"name": "Alice", "score": 95}, {"name": "Bob", "score": 87}]
+with open('/workspace/results.json', 'w') as f:
+    json.dump(data, f)
+```
+
+```bash
+# Bash: Extract specific fields
+cat results.json | jq '.[] | select(.score > 90) | .name'
+```
+
 ## Security Considerations
 
-- ✅ Code runs in WebAssembly sandbox (memory-isolated)
+- ✅ Python runs in WebAssembly sandbox (memory-isolated)
+- ✅ Bash uses just-bash (no real process spawning)
 - ✅ No direct host filesystem access (only workspace)
+- ✅ Execution limits prevent infinite loops and runaway scripts
 - ✅ Limited networking capabilities
 - ⚠️ Workspace files are accessible to all code executions
 - ⚠️ Installed packages persist in the session
