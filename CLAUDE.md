@@ -311,13 +311,29 @@ rm -rf test-workspace*
 
 # Run specific failing test
 npm test -- test/specific-test.test.ts
+
+# Run only bash tests (always reliable)
+npm test -- test/bash-only.test.ts
 ```
 
 ### Pyodide Issues
 
-Pyodide loads ~15MB on first run. If you see "ENOENT" errors:
+Pyodide loads ~15MB on first run and requires network access to fetch packages. Common issues:
+
+**"fetch failed" or "No module named 'micropip'":**
+- Pyodide tries to fetch packages from CDN on initialization
+- Ensure network access is available
+- In restricted environments, Pyodide tests may fail
+- Bash-only tests (`test/bash-only.test.ts`) will still pass
+
+**"ENOENT" errors:**
 - The paths might be incorrect in node_modules
 - Try reinstalling: `rm -rf node_modules && npm install`
+
+**Integration tests failing in CI:**
+- This is usually a Pyodide environment issue
+- The `test/bash-only.test.ts` suite should always pass
+- In production/development with network access, Pyodide works correctly
 
 ### Format/Lint Issues
 

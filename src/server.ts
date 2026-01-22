@@ -42,8 +42,9 @@ async function main() {
   registerAllResources(server, pyodideManager);
 
   // Pre-initialize managers (optional, improves first tool call latency)
-  await pyodideManager.initialize();
-  await bashManager.initialize();
+  // Note: Disabled for now - managers will initialize lazily on first use
+  // await pyodideManager.initialize();
+  // await bashManager.initialize();
 
   // Connect transport
   const transport = new StdioServerTransport();
