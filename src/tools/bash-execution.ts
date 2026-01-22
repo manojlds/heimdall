@@ -8,6 +8,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { BashManager } from "../core/bash-manager.js";
 import type { PyodideManager } from "../core/pyodide-manager.js";
 import { z } from "zod";
+import { posix as path } from "path";
 
 /**
  * Register bash execution tools with the MCP server
@@ -55,6 +56,42 @@ Examples:
     },
     async ({ command, cwd }) => {
       try {
+        // Validate cwd to prevent path traversal attacks
+        if (cwd) {
+          // Normalize the path to resolve any '..' components
+          const normalizedCwd = path.normalize(cwd);
+
+          // Check if it's an absolute path
+          if (path.isAbsolute(normalizedCwd)) {
+            // Absolute paths must be exactly /workspace or start with /workspace/
+            if (normalizedCwd !== "/workspace" && !normalizedCwd.startsWith("/workspace/")) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: `Invalid working directory: Absolute paths must be within /workspace (got: ${normalizedCwd})`,
+                  },
+                ],
+                isError: true,
+              };
+            }
+          } else {
+            // Relative paths: resolve from /workspace and check if it stays within
+            const resolvedPath = path.join("/workspace", normalizedCwd);
+            if (resolvedPath !== "/workspace" && !resolvedPath.startsWith("/workspace/")) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: `Invalid working directory: Path traversal detected (resolved to: ${resolvedPath})`,
+                  },
+                ],
+                isError: true,
+              };
+            }
+          }
+        }
+
         // Execute bash command
         const result = await bashManager.execute(command, { cwd });
 

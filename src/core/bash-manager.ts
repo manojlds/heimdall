@@ -24,7 +24,6 @@ export interface BashExecutionResult {
  */
 export interface BashExecutionOptions {
   cwd?: string;
-  env?: Record<string, string>;
 }
 
 /**
@@ -84,7 +83,6 @@ export class BashManager {
       // Execute the command
       const result = await this.bash.exec(command, {
         cwd: options?.cwd,
-        env: options?.env,
       });
 
       return {
