@@ -160,6 +160,10 @@ export class PyodideManager {
     if (!this.interruptBuffer && typeof SharedArrayBuffer !== "undefined") {
       this.interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
       this.pyodide.setInterruptBuffer(this.interruptBuffer);
+    } else if (typeof SharedArrayBuffer === "undefined") {
+      console.error(
+        "[Heimdall] Warning: SharedArrayBuffer unavailable - Python execution timeout mechanism disabled"
+      );
     }
 
     // Load micropip for package installation with proper error handling
