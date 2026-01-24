@@ -1,10 +1,10 @@
-# Claude Development Guide
+# Heimdall Development Guide
 
-This guide contains information for developers working on this project, particularly when using Claude or other AI assistants.
+This guide contains information for developers working on Heimdall, particularly when using Claude or other AI assistants.
 
 ## Project Overview
 
-This is a TypeScript MCP server providing sandboxed Python and Bash execution using:
+Heimdall is a TypeScript MCP server providing sandboxed Python and Bash execution using:
 - **Pyodide** - Python compiled to WebAssembly
 - **just-bash** - TypeScript-based bash simulator
 
@@ -298,13 +298,13 @@ These warnings come from Pyodide's FS API which uses `any` types. They can be sa
 
 ```bash
 # Workspace directory (default: ./workspace)
-PYODIDE_WORKSPACE=/path/to/workspace
+HEIMDALL_WORKSPACE=/path/to/workspace
 
 # Maximum size for a single file in bytes (default: 10485760 = 10MB)
-MAX_FILE_SIZE=52428800  # Example: 50MB
+HEIMDALL_MAX_FILE_SIZE=52428800  # Example: 50MB
 
 # Maximum total workspace size in bytes (default: 104857600 = 100MB)
-MAX_WORKSPACE_SIZE=524288000  # Example: 500MB
+HEIMDALL_MAX_WORKSPACE_SIZE=524288000  # Example: 500MB
 
 # Node.js memory limit
 NODE_OPTIONS="--max-old-space-size=4096"

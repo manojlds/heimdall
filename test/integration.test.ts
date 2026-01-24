@@ -1,5 +1,5 @@
 /**
- * MCP Integration Tests for Pyodide Sandbox Server
+ * MCP Integration Tests for Heimdall Server
  *
  * These tests spin up the MCP server and connect with a client
  * to verify all functionality works end-to-end.
@@ -57,7 +57,7 @@ beforeAll(async () => {
     args: ["tsx", serverPath],
     env: {
       ...process.env,
-      PYODIDE_WORKSPACE: TEST_WORKSPACE,
+      HEIMDALL_WORKSPACE: TEST_WORKSPACE,
     },
     cwd: path.join(__dirname, ".."),
   });
@@ -93,7 +93,7 @@ afterAll(async () => {
   console.log("✓ Cleanup complete");
 });
 
-describe("Pyodide Sandbox MCP Server", () => {
+describe("Heimdall MCP Server", () => {
   describe("Basic Python Execution", () => {
     it("should execute basic Python code", async () => {
       const result = (await callTool("execute_python", {
@@ -322,14 +322,14 @@ print(f"Mean: {df['score'].mean()}")
   });
 
   describe("MCP Resources", () => {
-    it("should read sandbox info resource", async () => {
+    it("should read heimdall info resource", async () => {
       const resources = await client!.listResources();
-      const infoResource = resources.resources.find((r) => r.uri === "sandbox://info");
+      const infoResource = resources.resources.find((r) => r.uri === "heimdall://info");
       expect(infoResource).toBeDefined();
 
-      const content = await client!.readResource({ uri: "sandbox://info" });
+      const content = await client!.readResource({ uri: "heimdall://info" });
       const text = content.contents[0];
-      expect("text" in text && text.text).toContain("Pyodide Sandbox");
+      expect("text" in text && text.text).toContain("Heimdall");
     });
 
     it("should read workspace files resource", async () => {
