@@ -1,8 +1,8 @@
-# Pyodide Sandbox MCP Server - Architecture
+# Heimdall MCP Server - Architecture
 
 ## Overview
 
-This document describes the modular architecture of the Pyodide Sandbox MCP Server. The codebase was refactored from a monolithic 850-line `server.ts` file into a clean, maintainable modular structure.
+This document describes the modular architecture of Heimdall MCP Server. The codebase was refactored from a monolithic 850-line `server.ts` file into a clean, maintainable modular structure.
 
 ## Directory Structure
 
@@ -175,8 +175,8 @@ src/
    - Template-based URI
    - Plain text content
 
-3. **`sandbox://info`**
-   - Sandbox environment information
+3. **`heimdall://info`**
+   - Heimdall environment information
    - Available packages
    - Capabilities and limitations
 

@@ -61,7 +61,7 @@ beforeAll(async () => {
     args: ["tsx", serverPath],
     env: {
       ...process.env,
-      PYODIDE_WORKSPACE: TEST_WORKSPACE,
+      HEIMDALL_WORKSPACE: TEST_WORKSPACE,
       // Use default limits: 10MB file, 100MB workspace
     },
     cwd: path.join(__dirname, ".."),

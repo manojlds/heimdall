@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Pyodide Sandbox MCP Server
+ * Heimdall MCP Server
  *
- * A TypeScript MCP server providing sandboxed Python code execution
- * using Pyodide (Python compiled to WebAssembly) and bash execution
- * using just-bash.
+ * A TypeScript MCP server providing sandboxed Python and Bash execution.
+ * Named after the Norse god who guards the Bifröst bridge, Heimdall watches
+ * over code execution with security and vigilance.
  *
  * Features:
- * - Secure Python execution in WebAssembly sandbox
- * - Bash command execution with just-bash
+ * - Secure Python execution via Pyodide (WebAssembly sandbox)
+ * - Bash command execution via just-bash
  * - Virtual filesystem with host sync
  * - Package installation via micropip
  * - Session persistence
@@ -25,7 +25,7 @@ import { registerAllResources } from "./resources/index.js";
  * Main entry point
  */
 async function main() {
-  console.error("[MCP] Starting Pyodide Sandbox server...");
+  console.error("[Heimdall] Starting server...");
 
   // Create manager instances
   const pyodideManager = new PyodideManager();
@@ -33,7 +33,7 @@ async function main() {
 
   // Create MCP server
   const server = new McpServer({
-    name: "pyodide-sandbox",
+    name: "heimdall",
     version: "1.0.0",
   });
 
@@ -50,10 +50,10 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  console.error("[MCP] Server connected and ready");
+  console.error("[Heimdall] Server connected and ready");
 }
 
 main().catch((error) => {
-  console.error("[MCP] Fatal error:", error);
+  console.error("[Heimdall] Fatal error:", error);
   process.exit(1);
 });

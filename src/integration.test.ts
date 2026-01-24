@@ -1,5 +1,5 @@
 /**
- * MCP Integration Tests for Pyodide Sandbox Server
+ * MCP Integration Tests for Heimdall Server
  *
  * These tests spin up the MCP server and connect with a client
  * to verify all functionality works end-to-end.
@@ -75,7 +75,7 @@ class McpTestRunner {
       args: ["tsx", serverPath],
       env: {
         ...process.env,
-        PYODIDE_WORKSPACE: TEST_WORKSPACE,
+        HEIMDALL_WORKSPACE: TEST_WORKSPACE,
       },
       cwd: path.join(__dirname, ".."),
     });
@@ -416,17 +416,14 @@ x = 1 / 0  # This will raise ZeroDivisionError
 
     // Test 14: Read resources
     this.results.push(
-      await this.runTest("Read sandbox info resource", async () => {
+      await this.runTest("Read heimdall info resource", async () => {
         const resources = await this.client!.listResources();
-        const infoResource = resources.resources.find((r) => r.uri === "sandbox://info");
-        assert(infoResource, "Should have sandbox://info resource");
+        const infoResource = resources.resources.find((r) => r.uri === "heimdall://info");
+        assert(infoResource, "Should have heimdall://info resource");
 
-        const content = await this.client!.readResource({ uri: "sandbox://info" });
+        const content = await this.client!.readResource({ uri: "heimdall://info" });
         const text = content.contents[0];
-        assert(
-          "text" in text && text.text.includes("Pyodide Sandbox"),
-          "Should contain sandbox info"
-        );
+        assert("text" in text && text.text.includes("Heimdall"), "Should contain Heimdall info");
       })
     );
 
