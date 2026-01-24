@@ -1,7 +1,7 @@
 /**
  * Filesystem Tools
  *
- * MCP tools for file system operations in the sandbox workspace
+ * MCP tools for file system operations in the Heimdall workspace
  */
 
 import { z } from "zod";
@@ -17,7 +17,7 @@ export function registerFilesystemTools(server: McpServer, pyodideManager: Pyodi
     "write_file",
     {
       title: "Write File",
-      description: `Write content to a file in the sandbox workspace.
+      description: `Write content to a file in the Heimdall workspace.
 
 Creates parent directories automatically. Files persist between executions.`,
       inputSchema: {
@@ -45,7 +45,7 @@ Creates parent directories automatically. Files persist between executions.`,
     "read_file",
     {
       title: "Read File",
-      description: "Read content from a file in the sandbox workspace.",
+      description: "Read content from a file in the Heimdall workspace.",
       inputSchema: {
         path: z.string().describe("File path relative to workspace"),
       },
@@ -70,7 +70,7 @@ Creates parent directories automatically. Files persist between executions.`,
     "list_files",
     {
       title: "List Files",
-      description: "List files and directories in the sandbox workspace.",
+      description: "List files and directories in the Heimdall workspace.",
       inputSchema: {
         path: z.string().optional().describe("Directory path (empty for workspace root)"),
       },
@@ -107,7 +107,7 @@ Creates parent directories automatically. Files persist between executions.`,
     "delete_file",
     {
       title: "Delete File",
-      description: "Delete a file or empty directory from the sandbox workspace.",
+      description: "Delete a file or empty directory from the Heimdall workspace.",
       inputSchema: {
         path: z.string().describe("File or directory path"),
       },

@@ -1,18 +1,18 @@
 {
-  "name": "sandbox",
+  "name": "heimdall",
   "version": "0.1.0",
-  "description": "MCP server providing sandboxed Python code execution via Pyodide",
+  "description": "Heimdall - MCP server providing sandboxed Python and Bash execution",
   "type": "module",
   "main": "dist/server.js",
   "license": "MIT",
   "author": "manojlds",
   "bin": {
-    "pyodide-sandbox-mcp": "dist/server.js"
+    "heimdall-mcp": "dist/server.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/manojlds/sandbox.git",
-    "directory": "mcp/pyodide-sandbox"
+    "url": "https://github.com/manojlds/heimdall.git",
+    "directory": "mcp/heimdall"
   },
   "scripts": {
     "build": "tsc",

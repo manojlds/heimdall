@@ -1,7 +1,7 @@
 /**
  * Workspace Resources
  *
- * MCP resources for accessing workspace information and sandbox details
+ * MCP resources for accessing workspace information and Heimdall environment details
  */
 
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -19,7 +19,7 @@ export function registerWorkspaceResources(server: McpServer, pyodideManager: Py
     "workspace://files",
     {
       title: "Workspace Files",
-      description: "List all files in the sandbox workspace",
+      description: "List all files in the Heimdall workspace",
       mimeType: "text/plain",
     },
     async () => {
@@ -71,17 +71,17 @@ export function registerWorkspaceResources(server: McpServer, pyodideManager: Py
     }
   );
 
-  // Sandbox information
+  // Heimdall environment information
   server.registerResource(
-    "sandbox-info",
-    "sandbox://info",
+    "heimdall-info",
+    "heimdall://info",
     {
-      title: "Sandbox Information",
-      description: "Information about the Pyodide sandbox environment",
+      title: "Heimdall Information",
+      description: "Information about the Heimdall execution environment",
       mimeType: "text/markdown",
     },
     async () => {
-      const info = `# Pyodide Sandbox Environment
+      const info = `# Heimdall Execution Environment
 
 ## Workspace
 - **Host path:** ${WORKSPACE_DIR}
@@ -120,7 +120,7 @@ See [Pyodide Packages](https://pyodide.org/en/stable/usage/packages-in-pyodide.h
 `;
 
       return {
-        contents: [{ uri: "sandbox://info", text: info }],
+        contents: [{ uri: "heimdall://info", text: info }],
       };
     }
   );

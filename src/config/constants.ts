@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
  * Host filesystem path to workspace directory
  */
 export const WORKSPACE_DIR =
-  process.env.PYODIDE_WORKSPACE || path.join(__dirname, "..", "..", "workspace");
+  process.env.HEIMDALL_WORKSPACE || path.join(__dirname, "..", "..", "workspace");
 
 /**
  * Virtual filesystem path to workspace directory in Pyodide

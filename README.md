@@ -1,6 +1,8 @@
-# Pyodide Sandbox MCP Server
+# Heimdall MCP Server
 
 A TypeScript MCP server providing **sandboxed Python and Bash execution** using [Pyodide](https://pyodide.org/) (Python compiled to WebAssembly) and [just-bash](https://github.com/vercel-labs/just-bash).
+
+> Named after the Norse god who guards the Bifröst bridge, Heimdall watches over code execution with security and vigilance.
 
 ## Features
 
@@ -38,7 +40,7 @@ A TypeScript MCP server providing **sandboxed Python and Bash execution** using 
 ## Installation
 
 ```bash
-cd mcp/pyodide-sandbox
+cd mcp/heimdall
 npm install
 ```
 
@@ -64,10 +66,10 @@ Add to your Cursor settings (`~/.cursor/mcp.json` or workspace `.cursor/mcp.json
 ```json
 {
   "mcpServers": {
-    "pyodide-sandbox": {
+    "heimdall": {
       "command": "node",
       "args": ["dist/server.js"],
-      "cwd": "/path/to/mcp/pyodide-sandbox"
+      "cwd": "/path/to/mcp/heimdall"
     }
   }
 }
@@ -78,10 +80,10 @@ Or for development with `tsx`:
 ```json
 {
   "mcpServers": {
-    "pyodide-sandbox": {
+    "heimdall": {
       "command": "npx",
       "args": ["tsx", "src/server.ts"],
-      "cwd": "/path/to/mcp/pyodide-sandbox"
+      "cwd": "/path/to/mcp/heimdall"
     }
   }
 }
@@ -91,7 +93,7 @@ Or for development with `tsx`:
 
 ### `execute_bash`
 
-Execute bash commands in the sandboxed environment using just-bash.
+Execute bash commands in the Heimdall environment using just-bash.
 
 **Features:**
 - 50+ built-in commands: grep, sed, awk, find, jq, curl, tar, etc.
@@ -255,7 +257,7 @@ Delete a file or empty directory.
 |-----|-------------|
 | `workspace://files` | Tree listing of workspace contents |
 | `workspace://file/{path}` | Read a specific file |
-| `sandbox://info` | Environment information |
+| `heimdall://info` | Environment information |
 
 ## Workspace
 
@@ -268,12 +270,12 @@ Customize the server behavior with environment variables:
 ```json
 {
   "mcpServers": {
-    "pyodide-sandbox": {
+    "heimdall": {
       "command": "node",
       "args": ["dist/server.js"],
-      "cwd": "/path/to/mcp/pyodide-sandbox",
+      "cwd": "/path/to/mcp/heimdall",
       "env": {
-        "PYODIDE_WORKSPACE": "/custom/workspace/path",
+        "HEIMDALL_WORKSPACE": "/custom/workspace/path",
         "MAX_FILE_SIZE": "52428800",
         "MAX_WORKSPACE_SIZE": "524288000"
       }
@@ -286,7 +288,7 @@ Customize the server behavior with environment variables:
 
 | Variable | Description | Default | Format |
 |----------|-------------|---------|--------|
-| `PYODIDE_WORKSPACE` | Path to workspace directory | `./workspace` | Absolute or relative path |
+| `HEIMDALL_WORKSPACE` | Path to workspace directory | `./workspace` | Absolute or relative path |
 | `MAX_FILE_SIZE` | Maximum size for a single file | `10485760` (10MB) | Bytes (positive integer) |
 | `MAX_WORKSPACE_SIZE` | Maximum total workspace size | `104857600` (100MB) | Bytes (positive integer) |
 
@@ -352,7 +354,7 @@ See [Pyodide Packages](https://pyodide.org/en/stable/usage/packages-in-pyodide.h
 ## Project Structure
 
 ```
-mcp/pyodide-sandbox/
+mcp/heimdall/
 ├── src/
 │   └── server.ts       # MCP server with Pyodide integration
 ├── dist/               # Compiled JavaScript (after build)

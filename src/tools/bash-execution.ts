@@ -1,7 +1,7 @@
 /**
  * Bash Execution Tools
  *
- * Provides tools for executing bash commands in the sandboxed environment
+ * Provides tools for executing bash commands in the Heimdall environment
  */
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -22,7 +22,7 @@ export function registerBashExecutionTools(
     "execute_bash",
     {
       title: "Execute Bash",
-      description: `Execute a bash command in the sandboxed environment.
+      description: `Execute a bash command in the Heimdall environment.
 
 Features:
 - Supports 50+ built-in commands: grep, sed, awk, find, jq, curl, tar, etc.

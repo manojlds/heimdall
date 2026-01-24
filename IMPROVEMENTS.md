@@ -1,6 +1,6 @@
 # Code Improvements & Technical Debt
 
-This document tracks identified areas for improvement in the Pyodide Sandbox MCP Server codebase. Items are organized by priority and category, with implementation status tracked.
+This document tracks identified areas for improvement in the Heimdall MCP Server codebase. Items are organized by priority and category, with implementation status tracked.
 
 **Last Updated:** 2026-01-21
 **Progress:** 2 High Priority Issues Fixed, 27 Improvements Pending
@@ -934,7 +934,7 @@ logger.debug({ path: '/workspace/file.py', msg: 'Reading file' });
 import { z } from 'zod';
 
 const envSchema = z.object({
-  PYODIDE_WORKSPACE: z.string().optional().default(
+  HEIMDALL_WORKSPACE: z.string().optional().default(
     path.join(process.cwd(), 'workspace')
   ),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
@@ -946,7 +946,7 @@ const envSchema = z.object({
 export const env = envSchema.parse(process.env);
 
 // Usage
-export const WORKSPACE_DIR = env.PYODIDE_WORKSPACE;
+export const WORKSPACE_DIR = env.HEIMDALL_WORKSPACE;
 export const MAX_FILE_SIZE = env.MAX_FILE_SIZE;
 ```
 
