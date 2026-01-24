@@ -58,7 +58,7 @@ beforeAll(async () => {
     args: ["tsx", serverPath],
     env: {
       ...process.env,
-      PYODIDE_WORKSPACE: TEST_WORKSPACE,
+      HEIMDALL_WORKSPACE: TEST_WORKSPACE,
     },
     cwd: path.join(__dirname, ".."),
   });
