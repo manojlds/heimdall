@@ -17,7 +17,7 @@ export function registerPythonExecutionTools(server: McpServer, pyodideManager: 
     "execute_python",
     {
       title: "Execute Python",
-      description: `Execute Python code in a sandboxed Pyodide environment.
+      description: `Execute Python code in the Heimdall environment (Pyodide sandbox).
 
 The code runs in an isolated WebAssembly sandbox with:
 - Access to /workspace directory for file I/O

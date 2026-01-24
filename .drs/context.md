@@ -1,7 +1,7 @@
-# Pyodide Sandbox MCP Server Project Context (Review Focus)
+# Heimdall MCP Server Project Context (Review Focus)
 
 ## What This Project Is
-A TypeScript MCP (Model Context Protocol) server providing sandboxed Python code execution using Pyodide (Python compiled to WebAssembly). It enables secure Python code execution in an isolated environment with virtual filesystem support.
+Heimdall is a TypeScript MCP (Model Context Protocol) server providing sandboxed Python and Bash code execution using Pyodide (Python compiled to WebAssembly) and just-bash. Named after the Norse god who guards the Bifröst bridge, Heimdall watches over code execution with security and vigilance.
 
 ## Core Architecture
 - MCP server implementation in `src/server.ts` using `@modelcontextprotocol/sdk`.
