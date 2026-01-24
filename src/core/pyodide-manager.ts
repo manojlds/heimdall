@@ -61,7 +61,6 @@ export class PyodideManager {
   private pyodide: PyodideInterface | null = null;
   private initialized = false;
   private initializationPromise: Promise<PyodideInterface> | null = null;
-  private interruptBuffer: Int32Array | null = null;
 
   // Worker thread for code execution with timeout support
   private worker: Worker | null = null;
@@ -189,16 +188,6 @@ export class PyodideManager {
 
     // Create workspace directory in virtual filesystem
     this.pyodide.FS.mkdirTree(VIRTUAL_WORKSPACE);
-
-    // Set up interruption buffer for timeouts (SharedArrayBuffer is required)
-    if (!this.interruptBuffer && typeof SharedArrayBuffer !== "undefined") {
-      this.interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
-      this.pyodide.setInterruptBuffer(this.interruptBuffer);
-    } else if (typeof SharedArrayBuffer === "undefined") {
-      console.error(
-        "[Heimdall] Warning: SharedArrayBuffer unavailable - Python execution timeout mechanism disabled"
-      );
-    }
 
     // Load micropip for package installation with proper error handling
     // Note: micropip loading may fail in some environments (restricted network, etc.)
